@@ -569,28 +569,39 @@ function MainContent() {
                         <p className="text-white font-medium">0754 496 773 / 0715 496 773</p>
                       </div>
                     </a>
-
                     <a
-                        href="https://mail.google.com/mail/?view=cm&fs=1&to=dimkahappy70@icloud.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="mailto:dimkahappy70@icloud.com?subject=Happy Ministry Inquiry"
+                        onClick={() => {
+                          setTimeout(() => {
+                            window.location.href =
+                                'https://mail.google.com/mail/?view=cm&fs=1&to=dimkahappy70@icloud.com&su=Happy%20Ministry%20Inquiry';
+                          }, 700);
+                        }}
                         className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-[#F5A623]/10 hover:border-[#F5A623]/40 transition-all group"
                     >
                       <div className="w-10 h-10 bg-[#F5A623]/20 rounded-full flex items-center justify-center group-hover:bg-[#F5A623] transition-all">
                         <Mail className="text-[#F5A623] group-hover:text-white transition-colors" size={18} />
                       </div>
+
                       <div>
                         <p className="text-white/50 text-xs uppercase tracking-wider mb-0.5">
                           {tx.contact.email}
                         </p>
-                        <p className="text-white font-medium">dimkahappy70@icloud.com</p>
+
+                        <p className="text-white font-medium">
+                          dimkahappy70@icloud.com
+                        </p>
                       </div>
                     </a>
 
                     <a
-                        href="https://mail.google.com/mail/?view=cm&fs=1&to=dimkahappy70@icloud.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="mailto:dimkahappy70@icloud.com?subject=Happy Ministry Inquiry"
+                        onClick={() => {
+                          setTimeout(() => {
+                            window.location.href =
+                                'https://mail.google.com/mail/?view=cm&fs=1&to=dimkahappy70@icloud.com&su=Happy%20Ministry%20Inquiry';
+                          }, 700);
+                        }}
                         className="block w-full mt-6 bg-[#F5A623] hover:bg-[#E8920A] text-white font-bold py-4 rounded-xl text-center transition-all hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
                     >
                       {tx.contact.sendMessage}

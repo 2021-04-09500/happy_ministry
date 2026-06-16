@@ -261,16 +261,34 @@ export default function AdminDashboard({ lang, tx }: Props) {
 
   return (
       <div className="min-h-screen bg-[#fafaf8]">
-        <header className="bg-[#1a1a1a] text-white py-6 px-4 sm:px-6 shadow-lg">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold">{tx.heading}</h1>
-              <p className="text-white/60 text-sm mt-1">{tx.welcomeBack}</p>
+        <header className="relative overflow-hidden bg-[#1a1a1a] text-white px-4 sm:px-6 py-6 shadow-lg border-b border-[#F5A623]/20">
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#F5A623]/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#F5A623]/50 to-transparent" />
+
+          <div className="relative max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-[#F5A623]/15 border border-[#F5A623]/35 flex items-center justify-center shadow-inner flex-shrink-0">
+                <FileText className="text-[#F5A623]" size={22} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[#F5A623] text-[11px] font-bold tracking-[0.25em] uppercase mb-1">
+                  Happy Ministry
+                </p>
+
+                <h1 className="text-xl sm:text-2xl font-bold leading-tight truncate">
+                  {tx.heading}
+                </h1>
+
+                <p className="text-white/55 text-sm mt-1 truncate">
+                  {tx.welcomeBack}
+                </p>
+              </div>
             </div>
 
             <button
                 onClick={signOut}
-                className="text-sm text-white/70 hover:text-[#F5A623] transition-colors"
+                className="flex-shrink-0 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-sm text-white/75 hover:text-white hover:border-[#F5A623]/50 hover:bg-[#F5A623]/10 transition-all"
             >
               {tx.login.logout}
             </button>
@@ -286,10 +304,10 @@ export default function AdminDashboard({ lang, tx }: Props) {
                   resetForm();
                   setShowForm(true);
                 }}
-                className="flex items-center gap-2 bg-[#F5A623] hover:bg-[#E8920A] text-white font-semibold px-4 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg"
+                className="inline-flex items-center justify-center gap-2 bg-[#F5A623] hover:bg-[#E8920A] text-white font-semibold px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 w-fit self-start sm:self-auto"
             >
-              <Plus size={18} />
-              <span className="hidden sm:inline">{tx.newPost}</span>
+              <Plus size={17} />
+              <span className="text-sm">{tx.newPost}</span>
             </button>
           </div>
 
