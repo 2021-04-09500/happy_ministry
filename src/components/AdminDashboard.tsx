@@ -6,7 +6,6 @@ import {
   X,
   FileText,
   Headphones,
-  Check,
   Loader2,
   Mic,
   Square,
@@ -249,6 +248,24 @@ export default function AdminDashboard({ lang, tx }: Props) {
     setDeleting(null);
   };
 
+  const handlePublishDraft = async (id: string) => {
+    const { error } = await supabase
+        .from('posts')
+        .update({ is_published: true })
+        .eq('id', id);
+
+    if (error) {
+      alert(
+          lang === 'sw'
+              ? 'Imeshindikana kuchapisha drafti.'
+              : 'Failed to publish draft.'
+      );
+      return;
+    }
+
+    await fetchPosts();
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-US', {
       year: 'numeric',
@@ -406,10 +423,37 @@ export default function AdminDashboard({ lang, tx }: Props) {
 
                           <input
                               type="file"
-                              accept="audio/*"
+                              accept="*/*"
                               className="hidden"
                               onChange={(e) => {
                                 const file = e.target.files?.[0] || null;
+
+                                if (!file) return;
+
+                                const allowedAudioTypes = [
+                                  'audio/mpeg',
+                                  'audio/mp3',
+                                  'audio/wav',
+                                  'audio/x-wav',
+                                  'audio/mp4',
+                                  'audio/m4a',
+                                  'audio/aac',
+                                  'audio/ogg',
+                                  'audio/webm',
+                                ];
+
+                                if (
+                                    file.type &&
+                                    !allowedAudioTypes.includes(file.type)
+                                ) {
+                                  alert(
+                                      lang === 'sw'
+                                          ? 'Tafadhali chagua faili la sauti.'
+                                          : 'Please select an audio file.'
+                                  );
+                                  return;
+                                }
+
                                 setAudioFile(file);
 
                                 if (file) {
@@ -453,19 +497,6 @@ export default function AdminDashboard({ lang, tx }: Props) {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <button
-                          type="button"
-                          onClick={() => setIsPublished(!isPublished)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                              isPublished ? 'bg-[#F5A623] text-white' : 'bg-gray-100 text-[#666]'
-                          }`}
-                      >
-                        {isPublished && <Check size={16} />}
-                        {isPublished ? tx.posts.isPublished : tx.posts.isDraft}
-                      </button>
-                    </div>
-
                     <div className="flex flex-col sm:flex-row gap-3 pt-4">
                       <button
                           type="button"
@@ -475,9 +506,47 @@ export default function AdminDashboard({ lang, tx }: Props) {
                         {tx.posts.cancel}
                       </button>
 
+                      {!editingPost && (
+                          <button
+                              type="button"
+                              disabled={saving || !title.trim()}
+                              onClick={async () => {
+                                setIsPublished(false);
+                                setTimeout(() => {
+                                  document.querySelector<HTMLFormElement>('form')?.requestSubmit();
+                                }, 0);
+                              }}
+                              className="flex-1 px-4 py-3 border border-[#F5A623] text-[#F5A623] font-bold rounded-xl hover:bg-[#F5A623]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {lang === 'sw' ? 'Hifadhi kama Drafti' : 'Save as Draft'}
+                          </button>
+                      )}
+
+                      {editingPost && !editingPost.is_published && (
+                          <button
+                              type="button"
+                              disabled={saving || !title.trim()}
+                              onClick={async () => {
+                                setIsPublished(false);
+                                setTimeout(() => {
+                                  document.querySelector<HTMLFormElement>('form')?.requestSubmit();
+                                }, 0);
+                              }}
+                              className="flex-1 px-4 py-3 border border-[#F5A623] text-[#F5A623] font-bold rounded-xl hover:bg-[#F5A623]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {lang === 'sw' ? 'Hifadhi Drafti' : 'Save Draft'}
+                          </button>
+                      )}
+
                       <button
-                          type="submit"
+                          type="button"
                           disabled={saving || !title.trim()}
+                          onClick={async () => {
+                            setIsPublished(true);
+                            setTimeout(() => {
+                              document.querySelector<HTMLFormElement>('form')?.requestSubmit();
+                            }, 0);
+                          }}
                           className="flex-1 bg-[#F5A623] hover:bg-[#E8920A] disabled:bg-[#F5A623]/60 text-white font-bold py-3 rounded-xl transition-all shadow-md disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {saving ? (
@@ -486,11 +555,17 @@ export default function AdminDashboard({ lang, tx }: Props) {
                               {editingPost ? tx.posts.updating : tx.posts.creating}
                             </>
                         ) : editingPost ? (
-                            tx.posts.update
-                        ) : isPublished ? (
-                            tx.posts.publish
+                            editingPost.is_published
+                                ? lang === 'sw'
+                                    ? 'Sasisha Chapisho'
+                                    : 'Update Post'
+                                : lang === 'sw'
+                                    ? 'Chapisha Drafti'
+                                    : 'Publish Draft'
+                        ) : lang === 'sw' ? (
+                            'Chapisha'
                         ) : (
-                            tx.posts.saveDraft
+                            'Publish'
                         )}
                       </button>
                     </div>
@@ -539,6 +614,14 @@ export default function AdminDashboard({ lang, tx }: Props) {
                         </div>
 
                         <div className="flex gap-2 flex-shrink-0 self-end sm:self-auto">
+                          {!post.is_published && (
+                              <button
+                                  onClick={() => handlePublishDraft(post.id)}
+                                  className="px-3 py-2 text-sm text-white bg-[#F5A623] hover:bg-[#E8920A] rounded-lg transition-all"
+                              >
+                                {lang === 'sw' ? 'Chapisha' : 'Publish'}
+                              </button>
+                          )}
                           <button
                               onClick={() => handleEdit(post)}
                               className="p-2 text-[#666] hover:text-[#F5A623] hover:bg-[#F5A623]/10 rounded-lg transition-all"

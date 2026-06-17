@@ -60,7 +60,17 @@ type View = 'main' | 'admin' | 'login' | 'words';
 function MainContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [lang, setLang] = useState<Lang>('en');
+  const getInitialLang = (): Lang => {
+    const browserLang = navigator.language.toLowerCase();
+
+    if (browserLang.startsWith('sw')) {
+      return 'sw';
+    }
+
+    return 'en';
+  };
+
+  const [lang, setLang] = useState<Lang>(getInitialLang);
   const [view, setView] = useState<View>('main');
 
   const { isAdmin } = useAuth();
