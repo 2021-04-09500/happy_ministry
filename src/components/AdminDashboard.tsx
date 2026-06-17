@@ -14,6 +14,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import type { Lang } from '../i18n';
+import RichTextEditor from './RichTextEditor';
 
 interface Post {
   id: string;
@@ -383,16 +384,14 @@ export default function AdminDashboard({ lang, tx }: Props) {
                         {sourceLang === 'sw' ? 'Ujumbe' : 'Message'}
                       </label>
 
-                      <textarea
+                      <RichTextEditor
                           value={content}
-                          onChange={(e) => setContent(e.target.value)}
+                          onChange={setContent}
                           placeholder={
                             sourceLang === 'sw'
                                 ? 'Andika ujumbe hapa...'
                                 : 'Write the message here...'
                           }
-                          rows={6}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5A623]/30 focus:border-[#F5A623] transition-all resize-none"
                       />
                     </div>
 

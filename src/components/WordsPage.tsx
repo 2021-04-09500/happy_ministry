@@ -62,7 +62,9 @@ interface Props {
   lang: Lang;
   tx: WordsTx;
   latestOnly?: boolean;
+  singlePostId?: string;
   onViewAll?: () => void;
+  onOpenPost?: (postId: string) => void;
 }
 
 const REACTION_EMOJIS = ['❤️', '🙏', '✝️', '🔥', '🙌', '💪'];
@@ -78,7 +80,14 @@ function getSessionId() {
   return sessionId;
 }
 
-export default function WordsPage({ lang, tx, latestOnly = false, onViewAll }: Props) {
+export default function WordsPage({
+                                    lang,
+                                    tx,
+                                    latestOnly = false,
+                                    singlePostId,
+                                    onViewAll,
+                                    onOpenPost,
+                                  }: Props) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -110,7 +119,7 @@ export default function WordsPage({ lang, tx, latestOnly = false, onViewAll }: P
 
   useEffect(() => {
     fetchPosts();
-  }, [search, dateFilter, latestOnly]);
+  }, [search, dateFilter, latestOnly, singlePostId]);
 
   const getPostTitle = (post: Post) => post.title;
 
@@ -125,7 +134,9 @@ export default function WordsPage({ lang, tx, latestOnly = false, onViewAll }: P
         .eq('is_published', true)
         .order('created_at', { ascending: false });
 
-    if (latestOnly) {
+    if (singlePostId) {
+      query = query.eq('id', singlePostId).limit(1);
+    } else if (latestOnly) {
       query = query.limit(1);
     }
 
@@ -379,18 +390,22 @@ export default function WordsPage({ lang, tx, latestOnly = false, onViewAll }: P
 
                         {postContent && (
                             <div className="px-5 sm:px-6 py-4">
-                              <p
+                              <div
                                   translate="yes"
-                                  className={`text-[#444] leading-relaxed whitespace-pre-wrap ${
-                                      expandedPost === post.id ? '' : 'line-clamp-4'
+                                  className={`text-[#444] leading-relaxed prose max-w-none [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-4 [&_blockquote]:border-[#F5A623] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#555] ${
+                                      singlePostId || expandedPost === post.id ? '' : 'line-clamp-4'
                                   }`}
-                              >
-                                {postContent}
-                              </p>
-
+                                  dangerouslySetInnerHTML={{ __html: postContent }}
+                              />
                               {postContent.length > 200 && expandedPost !== post.id && (
                                   <button
-                                      onClick={() => setExpandedPost(post.id)}
+                                      onClick={() => {
+                                        if (onOpenPost) {
+                                          onOpenPost(post.id);
+                                        } else {
+                                          setExpandedPost(post.id);
+                                        }
+                                      }}
                                       className="text-[#F5A623] text-sm font-medium mt-2 hover:underline"
                                   >
                                     {tx.readMore}

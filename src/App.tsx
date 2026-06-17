@@ -55,7 +55,7 @@ function Section({ children, className = '' }: { children: React.ReactNode; clas
 const PILLAR_ICONS = [<BookOpen size={22} />, <Heart size={22} />, <Star size={22} />];
 const MISSION_ICONS = [<BookOpen size={32} />, <Heart size={32} />, <Star size={32} />];
 
-type View = 'main' | 'admin' | 'login' | 'words';
+type View = 'main' | 'admin' | 'login' | 'words' | 'single-word';
 
 function MainContent() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -72,7 +72,7 @@ function MainContent() {
 
   const [lang, setLang] = useState<Lang>(getInitialLang);
   const [view, setView] = useState<View>('main');
-
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const { isAdmin } = useAuth();
   const tx = t[lang];
 
@@ -146,6 +146,28 @@ function MainContent() {
 
           <div className="min-h-screen bg-white pt-14">
             <WordsPage lang={lang} tx={tx.words} />
+          </div>
+        </>
+    );
+  }
+
+  if (view === 'single-word' && selectedPostId) {
+    return (
+        <>
+          <button
+              onClick={() => setView('main')}
+              className="fixed top-4 left-4 z-50 flex items-center gap-2 text-white bg-[#F5A623] hover:bg-[#E8920A] px-4 py-2 rounded-xl transition-all"
+          >
+            <X size={18} />
+            Back to Site
+          </button>
+
+          <div className="min-h-screen bg-white pt-14">
+            <WordsPage
+                lang={lang}
+                tx={tx.words}
+                singlePostId={selectedPostId}
+            />
           </div>
         </>
     );
@@ -481,7 +503,16 @@ function MainContent() {
           </div>
         </section>
 
-        <WordsPage lang={lang} tx={tx.words} latestOnly onViewAll={() => setView('words')} />
+        <WordsPage
+            lang={lang}
+            tx={tx.words}
+            latestOnly
+            onViewAll={() => setView('words')}
+            onOpenPost={(postId) => {
+              setSelectedPostId(postId);
+              setView('single-word');
+            }}
+        />
 
         <section id="location" className="py-16 sm:py-24 bg-[#fafaf8]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
