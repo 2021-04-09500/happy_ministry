@@ -89,7 +89,10 @@ export default function WordsPage({ lang, tx, latestOnly = false, onViewAll }: P
   const [submittingComment, setSubmittingComment] = useState<string | null>(null);
   const [showReactions, setShowReactions] = useState<string | null>(null);
   const [showComments, setShowComments] = useState<string | null>(null);
-
+  const [viewingReaction, setViewingReaction] = useState<{
+    postId: string;
+    emoji: string;
+  } | null>(null);
   const reactionRef = useRef<HTMLDivElement>(null);
   const sessionId = getSessionId();
 
@@ -403,7 +406,13 @@ export default function WordsPage({ lang, tx, latestOnly = false, onViewAll }: P
                             {post.reaction_counts?.map((reaction) => (
                                 <button
                                     key={reaction.emoji}
-                                    onClick={() => handleReaction(post.id, reaction.emoji)}
+                                    onClick={() =>
+                                        setViewingReaction(
+                                            viewingReaction?.postId === post.id && viewingReaction?.emoji === reaction.emoji
+                                                ? null
+                                                : { postId: post.id, emoji: reaction.emoji }
+                                        )
+                                    }
                                     className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-sm transition-all ${
                                         post.user_reactions?.includes(reaction.emoji)
                                             ? 'bg-[#F5A623] text-white'
@@ -415,6 +424,29 @@ export default function WordsPage({ lang, tx, latestOnly = false, onViewAll }: P
                                 </button>
                             ))}
                           </div>
+
+                          {viewingReaction?.postId === post.id && (
+                              <div className="w-full mt-2 bg-[#fafaf8] border border-gray-100 rounded-xl px-4 py-3 text-sm text-[#666]">
+                                {(() => {
+                                  const reaction = post.reaction_counts?.find(
+                                      (item) => item.emoji === viewingReaction.emoji
+                                  );
+
+                                  const count = reaction?.count || 0;
+
+                                  return (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xl">{viewingReaction.emoji}</span>
+                                        <span>
+            {lang === 'sw'
+                ? `${count} ${count === 1 ? 'mtu ameweka mwitikio huu' : 'watu wameweka mwitikio huu'}`
+                : `${count} ${count === 1 ? 'person reacted with this' : 'people reacted with this'}`}
+          </span>
+                                      </div>
+                                  );
+                                })()}
+                              </div>
+                          )}
 
                           <div className="relative" ref={showReactions === post.id ? reactionRef : null}>
                             <button
