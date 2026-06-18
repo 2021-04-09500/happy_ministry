@@ -142,13 +142,59 @@ export default function AdminDashboard({ lang, tx }: Props) {
 
     if (!source) return audioUrl;
 
-    const extension = source.name.split('.').pop() || 'webm';
-    const path = `words/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+    const originalName = source.name || `audio-${Date.now()}`;
 
-    const { error } = await supabase.storage.from('word-audio').upload(path, source, {
+    const allowedExtensions = ['mp3', 'm4a', 'wav', 'webm', 'ogg', 'oga', 'aac', 'mp4', 'mpeg'];
+    const rawExtension = originalName.includes('.')
+        ? originalName.split('.').pop()?.toLowerCase() || ''
+        : '';
+
+    let finalExtension = allowedExtensions.includes(rawExtension) ? rawExtension : '';
+
+    if (!finalExtension) {
+      if (source.type === 'audio/mp4' || source.type === 'audio/m4a' || source.type === 'video/mp4') {
+        finalExtension = 'm4a';
+      } else if (source.type === 'audio/wav' || source.type === 'audio/x-wav') {
+        finalExtension = 'wav';
+      } else if (source.type === 'audio/ogg') {
+        finalExtension = 'ogg';
+      } else if (source.type === 'audio/webm') {
+        finalExtension = 'webm';
+      } else {
+        finalExtension = 'mp3';
+      }
+    }
+
+    const contentType =
+        {
+          mp3: 'audio/mpeg',
+          mpeg: 'audio/mpeg',
+          m4a: 'audio/mp4',
+          mp4: 'audio/mp4',
+          wav: 'audio/wav',
+          webm: 'audio/webm',
+          ogg: 'audio/ogg',
+          oga: 'audio/ogg',
+          aac: 'audio/aac',
+        }[finalExtension] || 'audio/mpeg';
+
+    const safeBaseName = originalName
+        .replace(/\s+/g, '-')
+        .replace(/[^a-zA-Z0-9._-]/g, '')
+        .toLowerCase()
+        .replace(/\.[^/.]+$/, '');
+
+    const safeName = `${safeBaseName || 'audio'}-${Date.now()}.${finalExtension}`;
+    const path = `words/${crypto.randomUUID()}-${safeName}`;
+
+    const normalizedFile = new File([source], safeName, {
+      type: contentType,
+    });
+
+    const { error } = await supabase.storage.from('word-audio').upload(path, normalizedFile, {
       cacheControl: '3600',
       upsert: false,
-      contentType: source.type || 'audio/webm',
+      contentType,
     });
 
     if (error) throw error;
@@ -256,11 +302,7 @@ export default function AdminDashboard({ lang, tx }: Props) {
         .eq('id', id);
 
     if (error) {
-      alert(
-          lang === 'sw'
-              ? 'Imeshindikana kuchapisha drafti.'
-              : 'Failed to publish draft.'
-      );
+      alert(lang === 'sw' ? 'Imeshindikana kuchapisha drafti.' : 'Failed to publish draft.');
       return;
     }
 
@@ -370,11 +412,7 @@ export default function AdminDashboard({ lang, tx }: Props) {
                           type="text"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
-                          placeholder={
-                            sourceLang === 'sw'
-                                ? 'Weka kichwa cha ujumbe'
-                                : 'Enter post title'
-                          }
+                          placeholder={sourceLang === 'sw' ? 'Weka kichwa cha ujumbe' : 'Enter post title'}
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5A623]/30 focus:border-[#F5A623] transition-all"
                       />
                     </div>
@@ -387,11 +425,7 @@ export default function AdminDashboard({ lang, tx }: Props) {
                       <RichTextEditor
                           value={content}
                           onChange={setContent}
-                          placeholder={
-                            sourceLang === 'sw'
-                                ? 'Andika ujumbe hapa...'
-                                : 'Write the message here...'
-                          }
+                          placeholder={sourceLang === 'sw' ? 'Andika ujumbe hapa...' : 'Write the message here...'}
                       />
                     </div>
 
@@ -414,50 +448,18 @@ export default function AdminDashboard({ lang, tx }: Props) {
                         <label className="flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-[#F5A623]/50 rounded-xl text-[#666] hover:bg-[#F5A623]/5 transition-all cursor-pointer text-sm font-medium">
                           <UploadCloud size={18} className="text-[#F5A623]" />
 
-                          {audioFile
-                              ? audioFile.name
-                              : lang === 'sw'
-                                  ? 'Pakia sauti'
-                                  : 'Upload audio'}
+                          {audioFile ? audioFile.name : lang === 'sw' ? 'Pakia sauti' : 'Upload audio'}
 
                           <input
                               type="file"
-                              accept="*/*"
+                              accept="audio/*,*/*"
                               className="hidden"
                               onChange={(e) => {
                                 const file = e.target.files?.[0] || null;
-
                                 if (!file) return;
 
-                                const allowedAudioTypes = [
-                                  'audio/mpeg',
-                                  'audio/mp3',
-                                  'audio/wav',
-                                  'audio/x-wav',
-                                  'audio/mp4',
-                                  'audio/m4a',
-                                  'audio/aac',
-                                  'audio/ogg',
-                                  'audio/webm',
-                                ];
-
-                                if (
-                                    file.type &&
-                                    !allowedAudioTypes.includes(file.type)
-                                ) {
-                                  alert(
-                                      lang === 'sw'
-                                          ? 'Tafadhali chagua faili la sauti.'
-                                          : 'Please select an audio file.'
-                                  );
-                                  return;
-                                }
-
                                 setAudioFile(file);
-
-                                if (file) {
-                                  setRecordedBlob(null);
-                                }
+                                setRecordedBlob(null);
                               }}
                           />
                         </label>
@@ -554,13 +556,13 @@ export default function AdminDashboard({ lang, tx }: Props) {
                               {editingPost ? tx.posts.updating : tx.posts.creating}
                             </>
                         ) : editingPost ? (
-                            editingPost.is_published
-                                ? lang === 'sw'
-                                    ? 'Sasisha Chapisho'
-                                    : 'Update Post'
-                                : lang === 'sw'
-                                    ? 'Chapisha Drafti'
-                                    : 'Publish Draft'
+                            editingPost.is_published ? (
+                                lang === 'sw' ? 'Sasisha Chapisho' : 'Update Post'
+                            ) : lang === 'sw' ? (
+                                'Chapisha Drafti'
+                            ) : (
+                                'Publish Draft'
+                            )
                         ) : lang === 'sw' ? (
                             'Chapisha'
                         ) : (
@@ -621,6 +623,7 @@ export default function AdminDashboard({ lang, tx }: Props) {
                                 {lang === 'sw' ? 'Chapisha' : 'Publish'}
                               </button>
                           )}
+
                           <button
                               onClick={() => handleEdit(post)}
                               className="p-2 text-[#666] hover:text-[#F5A623] hover:bg-[#F5A623]/10 rounded-lg transition-all"
